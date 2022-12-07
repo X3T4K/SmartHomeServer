@@ -62,12 +62,23 @@ def blinds_management(zone, movement):
     zone = (re.findall(r'\d+', zone))[0]
     movement = 1 if movement == "Position.Up" else 0
     coils_to_set = [blinds_management_array[int(zone)][movement]]
+    #try:
+    #    return True
+    #finally:
+    #    for coil in coils_to_set[0]:
+    #        c.write_single_coil(int(coil), True)
+    #       time.sleep(30)
+
+
+@app.route("/coil/garage_management/<string:movement>", methods=['POST'])
+def garage_management(movement):
+    #movement = 1 if movement == "Position.Up" else 0
+    movement = 1
     try:
         return True
     finally:
-        for coil in coils_to_set[0]:
-            c.write_single_coil(int(coil), True)
-            time.sleep(30)
+        c.write_single_coil(105, movement)
+
 
 
 # @app.route("/light/google/<string:id>/<string:value>", methods=['POST'])
@@ -89,6 +100,22 @@ def blinds_management(zone, movement):
 #    else:
 #        return False
 
+@app.route('/redirects')
+def redirects():
+    logAccess(str(request.remote_addr))
+    return redirect("https://forms.gle/6Z6MehXEJeMpL7jx5")
+
+
+@app.route('/returnLink/YUWhR%x5hQI(ig&W.Qw3y=a^mf(', methods=['GET'])
+def returnLink():
+    logAccess(str(request.remote_addr))
+    # return ("https://drive.google.com/file/d/1-HwUgvn0hZnGowx9vj9K-5hmHUm3zAIf/view?usp=sharing")
+
+
+def logAccess(ipAddress):
+    f = open(r"/home/pi/Desktop/AccessLog.txt", "a")
+    f.write("\n" + datetime.now().strftime("%Y-%m-%d %H:%M") + " " + str(ipAddress))
+    f.close()
 
 if __name__ == "__main__":
     build_blinds_array()
