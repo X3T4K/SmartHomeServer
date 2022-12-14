@@ -34,10 +34,11 @@ def holding_register_writer(register, value):
     return str(request)
 
 
-@app.route("/register/reader/<string:register>", methods=['GET'])
-def holding_register_reader(register):
+@app.route("/register/reader/<string:register>/<string:correctionFactor>", methods=['GET'])
+def holding_register_reader(register, correctionFactor):
     register_addr = (int(register))
-    request = c.read_holding_registers(register_addr, 1)
+    correctionFactor = (int(correctionFactor))
+    request = c.read_holding_registers(register_addr, 1)[0]/correctionFactor
     return str(request)  # test the expected value
 
 
