@@ -34,10 +34,13 @@ def holding_register_writer(register, value):
     return str(request)
 
 
-@app.route("/register/reader/<string:register>", methods=['GET'])
-def holding_register_reader(register):
-    register_addr = (int(register))
-    request = c.read_holding_registers(register_addr, 1)
+@app.route("/register/reader/<string:device_endpoint>", methods=['GET'])
+def holding_register_reader(device_endpoint):
+    #sensor_temp_camera_502_225
+    endPoint = device_endpoint.split('_')
+    register_addr = (int(endPoint[3]))
+    correctionFactor = (int(endPoint[4]))
+    request = c.read_holding_registers(register_addr, 1)[0]/correctionFactor
     return str(request)  # test the expected value
 
 
@@ -79,6 +82,8 @@ def garage_management(movement):
     finally:
         c.write_single_coil(105, movement)
 
+
+def create_json
 
 
 # @app.route("/light/google/<string:id>/<string:value>", methods=['POST'])
