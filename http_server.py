@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import jsonify
 from pyModbusTCP.client import ModbusClient
 import re
 import time
@@ -34,13 +35,10 @@ def holding_register_writer(register, value):
     return str(request)
 
 
-@app.route("/register/reader/<string:device_endpoint>", methods=['GET'])
-def holding_register_reader(device_endpoint):
-    #sensor_temp_camera_502_225
-    endPoint = device_endpoint.split('_')
-    register_addr = (int(endPoint[3]))
-    correctionFactor = (int(endPoint[4]))
-    request = c.read_holding_registers(register_addr, 1)[0]/correctionFactor
+@app.route("/register/reader/<string:address>", methods=['GET'])
+def holding_register_reader(address):
+    register_addr = (int(address))
+    request = c.read_holding_registers(register_addr, 1)[0]
     return str(request)  # test the expected value
 
 
@@ -65,9 +63,10 @@ def blinds_management(zone, movement):
     zone = (re.findall(r'\d+', zone))[0]
     movement = 1 if movement == "Position.Up" else 0
     coils_to_set = [blinds_management_array[int(zone)][movement]]
-    #try:
+    return True
+    # try:
     #    return True
-    #finally:
+    # finally:
     #    for coil in coils_to_set[0]:
     #        c.write_single_coil(int(coil), True)
     #       time.sleep(30)
@@ -75,7 +74,7 @@ def blinds_management(zone, movement):
 
 @app.route("/coil/garage_management/<string:movement>", methods=['POST'])
 def garage_management(movement):
-    #movement = 1 if movement == "Position.Up" else 0
+    # movement = 1 if movement == "Position.Up" else 0
     movement = 1
     try:
         return True
@@ -83,7 +82,24 @@ def garage_management(movement):
         c.write_single_coil(105, movement)
 
 
-def create_json
+@app.route("/register/reader/<string:device_endpoint>", methods=['GET'])
+def plc_sensor_retriever(device_endpoint):
+    # sensor_temp_camera_502_225
+    end_point = device_endpoint.split('_')
+    register_addr = (int(end_point[3]))
+    correction_factor = (int(end_point[4]))
+    temperature = c.read_holding_registers(register_addr, 1)[0] / correction_factor
+    json_alexa_response = '{ "event": { "header": { "namespace": "Alexa", "name": "StateReport", "messageId": "Unique ' \
+                          'identifier, preferably a version 4 UUID", "correlationToken": "Opaque correlation token ' \
+                          'that matches the request", "payloadVersion": "3" }, "endpoint": { "endpointId": "endpoint ' \
+                          'ID", "cookie": {} }, "payload": { } }, "context": { "properties": [ { "namespace": ' \
+                          '"Alexa.TemperatureSensor", "name": "temperature", "value": { "value": 19.9, ' \
+                          '"scale": "CELSIUS" }, "timeOfSample": "2017-02-03T16:20:50.52Z", ' \
+                          '"uncertaintyInMilliseconds": 1000 } ] } } '
+    json_alexa_response = jsonify(json_alexa_response)
+    json_alexa_response['context']['properties']['timeOfSample'] = time.strftime("%Y-%m-%dT%H:%M:%S.52Z")
+    json_alexa_response['context']['properties']['value']['value'] = temperature
+    return str(json_alexa_response)  # test the expected value
 
 
 # @app.route("/light/google/<string:id>/<string:value>", methods=['POST'])
@@ -121,6 +137,7 @@ def logAccess(ipAddress):
     f = open(r"/home/pi/Desktop/AccessLog.txt", "a")
     f.write("\n" + datetime.now().strftime("%Y-%m-%d %H:%M") + " " + str(ipAddress))
     f.close()
+
 
 if __name__ == "__main__":
     build_blinds_array()

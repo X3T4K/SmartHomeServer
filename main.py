@@ -3,7 +3,7 @@
 # Press Maiusc+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
-from pyModbusTCP.client import ModbusClient
+import time
 
 
 def print_hi(name):
@@ -19,8 +19,6 @@ def print_hi(name):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    x = "night-zone-2"
-    if 'zone' in str(x):
-        print_hi('PyCharm')
-    else:
-        print_hi("gg")
+
+    timeofsample = time.strftime("%Y-%m-%dT%H:%M:%S.52Z")
+    print(strings)
