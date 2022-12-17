@@ -1,4 +1,6 @@
-from flask import Flask
+from datetime import datetime
+import json
+from flask import Flask, request, redirect
 from flask import jsonify
 from pyModbusTCP.client import ModbusClient
 import re
@@ -82,24 +84,25 @@ def garage_management(movement):
         c.write_single_coil(105, movement)
 
 
-@app.route("/register/reader/<string:device_endpoint>", methods=['GET'])
+@app.route("/plc_sensor_retriever/<string:device_endpoint>", methods=['GET'])
 def plc_sensor_retriever(device_endpoint):
-    # sensor_temp_camera_502_225
+    print(device_endpoint)
     end_point = device_endpoint.split('_')
-    register_addr = (int(end_point[3]))
-    correction_factor = (int(end_point[4]))
+    register_addr = int(end_point[3])
+    correction_factor = int(end_point[4])
     temperature = c.read_holding_registers(register_addr, 1)[0] / correction_factor
-    json_alexa_response = '{ "event": { "header": { "namespace": "Alexa", "name": "StateReport", "messageId": "Unique ' \
-                          'identifier, preferably a version 4 UUID", "correlationToken": "Opaque correlation token ' \
-                          'that matches the request", "payloadVersion": "3" }, "endpoint": { "endpointId": "endpoint ' \
-                          'ID", "cookie": {} }, "payload": { } }, "context": { "properties": [ { "namespace": ' \
-                          '"Alexa.TemperatureSensor", "name": "temperature", "value": { "value": 19.9, ' \
-                          '"scale": "CELSIUS" }, "timeOfSample": "2017-02-03T16:20:50.52Z", ' \
-                          '"uncertaintyInMilliseconds": 1000 } ] } } '
-    json_alexa_response = jsonify(json_alexa_response)
-    json_alexa_response['context']['properties']['timeOfSample'] = time.strftime("%Y-%m-%dT%H:%M:%S.52Z")
-    json_alexa_response['context']['properties']['value']['value'] = temperature
-    return str(json_alexa_response)  # test the expected value
+    jsonstr_alexa_response = '{ "event": { "header": { "namespace": "Alexa", "name": "StateReport", "messageId": ' \
+                             '"Unique identifier, preferably a version 4 UUID", "correlationToken": "Opaque ' \
+                             'correlation token that matches the request", "payloadVersion": "3" }, "endpoint": { ' \
+                             '"scope": { "type": "BearerToken", "token": "OAuth2.0 bearer token" }, "endpointId": ' \
+                             '"endpoint ID", "cookie": {} }, "payload": { } }, "context": { "properties": [ { ' \
+                             '"namespace": "Alexa.TemperatureSensor", "name": "temperature", "value": { "value": ' \
+                             '19.9, "scale": "CELSIUS" }, "timeOfSample": "2017-02-03T16:20:50.52Z", ' \
+                             '"uncertaintyInMilliseconds": 1000 } ] } } '
+    json_alexa_response = json.loads(jsonstr_alexa_response)
+    json_alexa_response['context']['properties'][0]['timeOfSample'] = time.strftime("%Y-%m-%dT%H:%M:%S.52Z")
+    json_alexa_response['context']['properties'][0]['value']['value'] = int(temperature)
+    return json.dumps(json_alexa_response)  # test the expected value
 
 
 # @app.route("/light/google/<string:id>/<string:value>", methods=['POST'])
